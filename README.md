@@ -210,9 +210,66 @@ package_xo  -kernel_name <arg> [-force] [-kernel_xml <arg>] [-design_xml <arg>]
             [-kernel_xml_pipes <args>] [-kernel_xml_connections <args>]
             -xo_path <arg> [-quiet] [-verbose]
 
+| Argument | Description |
+| --- | --- |
+| `-kernel_name <arg>` | Required. Specifies the name of the RTL kernel. |
+| `-force` | (Optional) Overwrite an existing .xo file if one exists. |
+| `-kernel_xml <arg>` | (Optional) Specify the path to an existing kernel XML file. |
+| `-design_xml <arg>` | (Optional) Specify the path to an existing design XML file |
+| `-ip_directory <arg>	` | (Optional) Specify the path to the kernel IP directory. |
+| `-parent_ip_directory	` | (Optional) If the kernel IP directory specified contains multiple IPs, specify a directory path to the parent IP where its component.xml is located directly below. |
+| `-kernel_files` | (Optional) Kernel file name(s). |
+| `-kernel_xml_args <args>	` | (Optional) Generate the kernel.xml with the specified function arguments. |
+| `-kernel_xml_pipes <args>	` | (Optional) Generate the kernel.xml with the specified pipe(s) |
+| `-kernel_xml_connections <args>	` | (Optional) Generate the kernel.xml file with the specified connections. |
+| `-xo_path <arg>	` | (Required) Specifies the path and file name of the compiled object (.xo) file |
+| `-quiet` | (Optional) Execute the command quietly, returning no messages from the command. The command also returns TCL_OK regardless of any errors encountered during execution |
+| `-verbose` | (Optional) Temporarily override any message limits and return all messages from this command. |
+
+In our case, the command that we are using is the following:
+`package_xo -xo_path {xoname} -kernel_name Vadd_A_B -ip_directory ./packaged_kernel_${suffix} -kernel_xml ./src/xml/kernel.xml`
+
+where:
+```
+{xoname} is .xclbin/$(KERNEL).$(TARGET).$(DEVICE).xo 
+{suffix} is "$(KERNEL)_$(TARGET)_$(DEVICE)"
+  $(KERNEL): vadd
+  $(TARGET): hw
+  $(DEVICE): xilinx_u250_xdma_201830_2
+```
 
 ## XML file
+As it can be seen, a kernel description XML file is needed by the `package_xo` command to create an RTL kernel that can be used in the SDAccel environment (it is necessary one per kernel). The file must be called `kernel.xml`. The XML file specifies kernel attributes like the register map and ports which are needed by the runtime and SDAccel flows. The following is the structure of our `kernel.xml` file:
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<root versionMajor="1" versionMinor="6">
+  <kernel name="Vadd_A_B" language="ip_c" vlnv="mycompany.com:kernel:Vadd_A_B:1.0" attributes="" preferredWorkGroupSizeMultiple="0" workGroupSize="1" interrupt="true" hwControlProtocol="ap_ctrl_hs">
+    <ports>
+      <port name="s_axi_control" mode="slave" range="0x1000" dataWidth="32" portType="addressable" base="0x0"/>
+      <port name="m00_axi" mode="master" range="0xFFFFFFFFFFFFFFFF" dataWidth="512" portType="addressable" base="0x0"/>
+      <port name="m01_axi" mode="master" range="0xFFFFFFFFFFFFFFFF" dataWidth="512" portType="addressable" base="0x0"/>
+    </ports>
+    <args>
+      <arg name="scalar00" addressQualifier="0" id="0" port="s_axi_control" size="0x4" offset="0x010" type="uint" hostOffset="0x0" hostSize="0x4"/>
+      <arg name="A" addressQualifier="1" id="1" port="m00_axi" size="0x8" offset="0x018" type="int*" hostOffset="0x0" hostSize="0x8"/>
+      <arg name="B" addressQualifier="1" id="2" port="m01_axi" size="0x8" offset="0x024" type="int*" hostOffset="0x0" hostSize="0x8"/>
+    </args>
+  </kernel>
+</root>
 
+```
+
+The following table describes the format of the kernel XML in detail:
+| Tag | Attribute | Description |
+| --- | --- | --- |
+| `<root>` | versionMajor | Set to 1 for the current release of SDAccel |
+|  | versionMinor | Set to 6 for the current release of SDAccel. |
+| `<kernel>` | name | Kernel name |
+|  | language | Always set it to `ip_c` for RTL kernels.
+|  | vlnv | Must match the vendor, library, name, and version attributes in the `component.xml` of an IP. For example, if `component.xml` has the following tags: <br>
+<ul>
+  <li> `<spirit:vendor>xilinx.com</spirit:vendor>` </li>
+</ul>
 
 
 
