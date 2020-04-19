@@ -195,7 +195,7 @@ The object files are subsequently linked with the shell (hardware platform) thro
 
 The following figure shows the compiling and linking flow for the various types of kernels.  
 
-  [compiling_and_linking_flow](vitis image.png)
+  [compiling_and_linking_flow](vitis.png)
 
 This tutorial is limited to `package_xo` compilation of RTL kernels.
 
