@@ -279,6 +279,18 @@ The following table describes the format of the kernel XML in detail:
 |  | base | For AXI4 master and slave ports, set to `0x0`. This tag is not applicable to AXI4-Stream ports | 
 | `<arg>` | name | Kernel argument name. | 
 |  | addressQualifier | <p> Valid values: <br> 0:Scalar kernel input argument <br> 1:global memory <br> 2:local memory <br> 3:constant memory <br> 4:pipe </p> |
+|  | id | <p> Only applicable for AXI4 master and slave ports. The ID needs to be sequential. It is used to determine the order of kernel arguments. <br> Not applicable for AXI4-Stream ports </p> |
+|  | port | Indicates the port to which the `arg` is connected. |
+|  | size | Size of the argument. The default is 4 bytes. |
+|  | offset | Indicates the register memory address. |
+|  | type | The C data type for the argument. For example, `int*`, `float*`. |
+|  | hostOffset | Reserved. Set to `0x0`. |
+|  | hostSize | Size of the argument. The default is 4 bytes. | 
+|  | memSize  | <p> Not applicable to AXI4 master and slave ports. <br> For AXI4-Stream ports, memSize sets the depth of the created FIFO. </p> | 
+
+
+
+
 
 
 
