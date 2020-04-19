@@ -267,6 +267,19 @@ The following table describes the format of the kernel XML in detail:
 | `<kernel>` | name | Kernel name |
 |  | language | Always set it to `ip_c` for RTL kernels.
 |  | vlnv | <p>Must match the vendor, library, name, and version attributes in the `component.xml` of an IP. For example, if `component.xml` has the following tags: <br>`<spirit:vendor>xilinx.com</spirit:vendor>` <br> `<spirit:library>hls</spirit:library>` <br> `<spirit:name>test_sincos</spirit:name>` <br> `<spirit:version>1.0</spirit:version>` <br> The vlnv attribute in kernel XML must be set to: <br> `xilinx.com:hls:test_sincos:1.0`</p> |
+|  | attributes | Reserved. Set it to empty string. |
+|  | preferredWorkGroupSizeMultiple | Reserved. Set it to 0. |
+|  | workGroupSize | Reserved. Set it to 1. |
+|  | interrupt | Set equal to "true" (that is,. interrupt="true") if interrupt present else omit. |
+| `<port>` | name | Port name. At least an AXI4 master port and an AXI4-Lite slave port are required. The AXI4-Stream port can be optionally specified to stream data between kernels. The AXI4-Lite interface name must be `S_AXI_CONTROL`. |
+|  | mode | <ul><li>For AXI4 master port, set it to "master."</li><li>For AXI4 slave port, set it to "slave."</li><li>For AXI4-Stream master port, set it to "write_only."</li><li>For AXI4-Stream slave port, set it "read_only."</li></ul> |
+|  | range | The range of the address space for the port | 
+|  | dataWidth | The width of the data that goes through the port, default is 32 bits |
+|  | portType  | <p>Indicate whether or not the port is addressable or streaming. <ul><li>For AXI4 master and slave ports, set it to "addressable."</li><li>For AXI4-Stream ports, set it to "stream."</li></ul></p> |
+|  | base | For AXI4 master and slave ports, set to `0x0`. This tag is not applicable to AXI4-Stream ports | 
+| `<arg>` | name | Kernel argument name. | 
+|  | addressQualifier | <p> Valid values: <br> 0:Scalar kernel input argument <br> 1:global memory <br> 2:local memory <br> 3:constant memory <br> 4:pipe </p> |
+
 
 
 
