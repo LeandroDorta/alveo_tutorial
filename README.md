@@ -408,7 +408,7 @@ vitis_analyzer link_summary
 vitis_analyzer run_summary
 ```
 
-![guidance](guidance_vitis.PNG)
+![guidance](guidance_vitis.png)
 
 * The following figure shows an example of the guidance report generated during the run stage. This can be opened using the run_summary report.
 
