@@ -100,11 +100,13 @@ For this tutorial, the Vector-Accumulate RTL IP performing `B[i]=A[i]+B[i]` meet
 
 To access the reference files for this tutoral, type the following into a terminal:
 
-` % mkdir $HOME/tutorial`
-` % cd $HOME/tutorial`
-` % git clone https://github.com/LeandroDorta/alveo_tutorial`
-` % cd alveo_tutorial`
-` % TOPDIR=$PWD`
+```
+ % mkdir $HOME/tutorial
+ % cd $HOME/tutorial
+ % git clone https://github.com/LeandroDorta/alveo_tutorial
+ % cd alveo_tutorial
+ % TOPDIR=$PWD
+```
 
 The alveo_tutorial directory is structured in the following way:
 ```
