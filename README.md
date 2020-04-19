@@ -266,10 +266,7 @@ The following table describes the format of the kernel XML in detail:
 |  | versionMinor | Set to 6 for the current release of SDAccel. |
 | `<kernel>` | name | Kernel name |
 |  | language | Always set it to `ip_c` for RTL kernels.
-|  | vlnv | Must match the vendor, library, name, and version attributes in the `component.xml` of an IP. For example, if `component.xml` has the following tags: <br>
-<ul>
-  <li> `<spirit:vendor>xilinx.com</spirit:vendor>` </li>
-</ul>
+|  | vlnv | <p>Must match the vendor, library, name, and version attributes in the `component.xml` of an IP. For example, if `component.xml` has the following tags: <br>`<spirit:vendor>xilinx.com</spirit:vendor>` <br> `<spirit:library>hls</spirit:library>` <br> `<spirit:name>test_sincos</spirit:name>` <br> `<spirit:version>1.0</spirit:version>` <br> The vlnv attribute in kernel XML must be set to: <br> `xilinx.com:hls:test_sincos:1.0`</p> |
 
 
 
