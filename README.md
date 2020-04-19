@@ -288,6 +288,30 @@ The following table describes the format of the kernel XML in detail:
 |  | hostSize | Size of the argument. The default is 4 bytes. | 
 |  | memSize  | <p> Not applicable to AXI4 master and slave ports. <br> For AXI4-Stream ports, memSize sets the depth of the created FIFO. </p> | 
 
+The following tags specify additional information for AXI4-Stream ports. They are not applicable to AXI4 master or slave ports.
+```
+For each pipe in the compute unit, the compiler inserts a FIFO for buffering the data. 
+The pipe tag describes configuration of the FIFO.
+
+```
+| Tag | Attribute | Description | 
+| --- | --- | --- | 
+| `<pipe>` | name | This specifies the name for the FIFO inserted for the AXI4-Stream port. This name must be unique among all pipes used in the same compute unit. | 
+|  | width | This specifies the width of FIFO in bytes. For example, `0x4` for 32-bit FIFO. | 
+|  | depth | This specifies the depth of the FIFO in number of words. | 
+|  | linkage | Always set to internal. | 
+
+```
+The connection tag describes the actual connection in hardware either from the kernel 
+to the FIFO inserted for the PIPE or from the FIFO to the kernel.
+```
+| Tag | Attribute | Description | 
+| --- | --- | --- | 
+| `<connection>` | srcInst | Specifies the source instance of the connection. | 
+|  | srcPort | Specifies the port on the source instance for the connection. | 
+|  | dstInst | Specifies the destination instance of the connection. | 
+|  | dstPort | Specifies the port on the destination instance of the connection. | 
+
 
 
 
