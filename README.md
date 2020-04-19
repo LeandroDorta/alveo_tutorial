@@ -199,7 +199,7 @@ The object files are subsequently linked with the shell (hardware platform) thro
 
 The following figure shows the compiling and linking flow for the various types of kernels.  
 
-  ![compiling_and_linking_flow](vitis.png)
+  ![compiling_and_linking_flow](images/vitis.png)
 
 This tutorial is limited to `package_xo` compilation of RTL kernels.
 
@@ -408,11 +408,11 @@ vitis_analyzer link_summary
 vitis_analyzer run_summary
 ```
 
-![guidance](guidance_vitis.png)
+![guidance](images/guidance_vitis.png)
 
 * The following figure shows an example of the guidance report generated during the run stage. This can be opened using the run_summary report.
 
-     ![Hardware compilation guidance report](system_estimate_example_report_vitis.png)
+     ![Hardware compilation guidance report](images/system_estimate_example_report_vitis.png)
 
 ### Putting it All Together
 
