@@ -107,7 +107,7 @@ To access the reference files for this tutoral, type the following into a termin
 ` % TOPDIR=$PWD`
 
 The alveo_tutorial directory is structured in the following way:
-
+```
 alveo_tutorial
 |___ [Makefile]()
 |___ [run_rtl_kernel.sh]()
@@ -130,7 +130,7 @@ alveo_tutorial
      |    |___ [Vadd_B.sv]()
      |___ xml
           |___ [kernel.xml]()
- 
+``` 
 
 
 # 4. Host program (Building the Software)
