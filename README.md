@@ -74,6 +74,8 @@ To comply with this execution model, the Vitis core development kit requires tha
 
 If the original RTL design uses a different execution model or hardware interface, you must add logic to ensure that the design behaves in the expected manner and complies with interface requirements.
 
+If you want to know more about AXI4 Protocol, you can refer to ***AXI Reference Guide ([UG1037](https://www.xilinx.com/support/documentation/ip_documentation/axi_ref_guide/latest/ug1037-vivado-axi-reference-guide.pdf))*** or 
+
 ## Vector-Accumulate RTL IP
 
 For this tutorial, the Vector-Accumulate RTL IP performing `B[i]=A[i]+B[i]` meets all the requirements described above and has the following characteristics:
