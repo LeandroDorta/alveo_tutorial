@@ -271,6 +271,7 @@ The following table describes the format of the kernel XML in detail:
 |  | preferredWorkGroupSizeMultiple | Reserved. Set it to 0. |
 |  | workGroupSize | Reserved. Set it to 1. |
 |  | interrupt | Set equal to "true" (that is,. interrupt="true") if interrupt present else omit. |
+|  | hwControlProtocol | <p> Set the kernel mode of operation <br> `ap_ctrl_none` for free-running kernels <br> `ap_ctrl_hs` for sequential kernels <br> `ap_ctrl_chain` for pipelined kernels </p>
 | `<port>` | name | Port name. At least an AXI4 master port and an AXI4-Lite slave port are required. The AXI4-Stream port can be optionally specified to stream data between kernels. The AXI4-Lite interface name must be `S_AXI_CONTROL`. |
 |  | mode | <ul><li>For AXI4 master port, set it to "master."</li><li>For AXI4 slave port, set it to "slave."</li><li>For AXI4-Stream master port, set it to "write_only."</li><li>For AXI4-Stream slave port, set it "read_only."</li></ul> |
 |  | range | The range of the address space for the port | 
