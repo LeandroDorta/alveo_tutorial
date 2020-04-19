@@ -412,7 +412,7 @@ vitis_analyzer run_summary
 
 * The following figure shows an example of the guidance report generated during the run stage. This can be opened using the run_summary report.
 
-     ![Hardware compilation guidance report](images/system_estimate_example_report_vitis.png)
+     ![Hardware compilation guidance report](system_estimate_example_report_vitis.png)
 
 ### Putting it All Together
 
