@@ -3,6 +3,10 @@
     <td align="center"><h1>Getting started with RTL Kernels on Alveo Card</h1>
     </td>
   </tr>
+  <tr>
+    <td align="center"><h3>Author: Leandro Dorta Duque</h3></td>
+  </tr>
+  
 </table>
 
 > **IMPORTANT**
@@ -210,10 +214,22 @@ Optionally, the output object file name can be specified with the `-o` option as
    >* `-lOpenCL`, `-lpthread`, `-lrt`, and `-lstdc++`: Search the named library during linking
 
 # 5. RTL Kernel (Building the Hardware)
+
+**Hardware Structure**
+
 Before building the hardware, we must understand how it is structured in order to be built in the Alveo card. Remember that the hardware must meet certain requirements in order to be recognized as an RTL kernel, so if your RTL IP does not meet these requirements, it must be packed in a wrapper that does meet them. The RTL files provided in this tutorial are structured so your RTL IP is properly packed. The following diagram illustrates the structure of the RTL kernel: 
 
 ![RTL Kernel Diagram](RTL_kernel_diagram.jpg)
 
+The top module corresponds to the RTL kernel. The name of the module (kernel_name) must match with the name of the kernel specified in the host program (in the case of this tutorial, gcd_kernel). The top module for the kernel is located in the `kernel.v` file. It is important to point that the top file for our RTL kernel must be a Verilog (.v) file since SystemVerilog (.sv) files as top file for the RTL kernel is not supported by Xilinx (at the time this tutorial is being written). The top module contains `s_axi_control` and `Top_wrapper` modules. 
+
+The `s_axi_control` module (located in s_axi_control.sv) handles the AXI4-Lite control interface between the processor and the kernel. This module handles control signals to start the operations of the RTL such as reading data from memory and status signals that informs if the system is idle, done or ready to start a new operation. The `s_axi_control` module also transfers scalar arguments and memory locations received from the host program to the RTL design.  
+
+The `Top_wrapper` module (located in {kernel_name}.sv) functions as a wrapper for our RTL design in order to meet the requirements to be considered as an RTL kernel. As it can be seen in the diagram, it interacts with `s_axi_control` through control and status signals and receiving scalar parameters and memory locations. The `Top_wrapper` also handles AXI4 Master Memory Mapped interfaces through `axi_read_master` and `axi_write_master` modules.
+
+The `axi_read_master` (located in axi_read_master.sv) and `axi_write_master` (located in axi_write_master.sv) modules handle the operations of reading and writing to memory respectively. Every AXI4 Master interface contains 5 channels: 2 for reading operations and 3 for writing operations as it can be seen in the following diagrams: 
+
+![AXI4 channels](AXI4_ifc.jpg)
 
 After building the host program, you need to build the kernels that run on the hardware accelerator card.  Like building the host application, building kernels also requires compiling and linking. The hardware kernels can be coded in C/C++, OpenCL C, or RTL. The C/C++ and OpenCL C kernels are compiled using the Vitis compiler, while RTL-coded kernels are compiled using the Xilinx `package_xo` utility.
 
