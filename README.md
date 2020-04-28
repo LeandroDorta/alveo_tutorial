@@ -210,7 +210,12 @@ Optionally, the output object file name can be specified with the `-o` option as
    >* `-lOpenCL`, `-lpthread`, `-lrt`, and `-lstdc++`: Search the named library during linking
 
 # 5. RTL Kernel (Building the Hardware)
-Next, you need to build the kernels that run on the hardware accelerator card.  Like building the host application, building kernels also requires compiling and linking. The hardware kernels can be coded in C/C++, OpenCL C, or RTL. The C/C++ and OpenCL C kernels are compiled using the Vitis compiler, while RTL-coded kernels are compiled using the Xilinx `package_xo` utility.
+Before building the hardware, we must understand how it is structured in order to be built in the Alveo card. Remember that the hardware must meet certain requirements in order to be recognized as an RTL kernel, so if your RTL IP does not meet these requirements, it must be packed in a wrapper that does meet them. The RTL files provided in this tutorial are structured so your RTL IP is properly packed. The following diagram illustrates the structure of the RTL kernel: 
+
+![RTL Kernel Diagram](images/RTL_Kernel_diagram.jpg)
+
+
+After building the host program, you need to build the kernels that run on the hardware accelerator card.  Like building the host application, building kernels also requires compiling and linking. The hardware kernels can be coded in C/C++, OpenCL C, or RTL. The C/C++ and OpenCL C kernels are compiled using the Vitis compiler, while RTL-coded kernels are compiled using the Xilinx `package_xo` utility.
 
 For details on both `v++` and `package_xo`, refer to the [Vitis Environment Reference Materials](https://www.xilinx.com/html_docs/xilinx2019_2/vitis_doc/yxl1556143111967.html). Regardless of how each kernel is compiled, both methods generate a Xilinx object file (XO) as an output.
 
