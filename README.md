@@ -24,15 +24,6 @@ The contents of this tutorial are structured in the following way:
 4. Hardware linking using `v++` command `-l` option to create output binary container (XCLBIN) file.
 5. Program RTL kernel onto the FPGA and run in in Hardware or Hardware-Emulation.
 
-> **IMPORTANT**
-> This tutorial shows the methodology to build both software and hardware portions of the design 
-> going step by step through the different commands, but there is a Makefile that automates this
-> process. If you want to know about the different options of the Makefile, you can type:
-```
-$ cd $TOPDIR
-$ make help
-```
-
 # 3. Requirements for Using an RTL Design as an RTL Kernel
 To use an RTL kernel within the Vitis IDE, it must meet both the Vitis core development kit execution model and the hardware interface requirements.
 
@@ -149,6 +140,14 @@ alveo_tutorial
           |___ kernel.xml
 ``` 
 
+> **IMPORTANT**
+> This tutorial shows the methodology to build both software and hardware portions of the design 
+> going step by step through the different commands, but there is a Makefile that automates this
+> process. If you want to know about the different options of the Makefile, you can type:
+```
+$ cd $TOPDIR
+$ make help
+```
 
 # 4. Host program (Building the Software)
 The software program is written in C/C++ and uses OpenCL™ API calls to communicate and control the accelerated kernels. It is built using the standard GCC compiler or using the `g++` compiler, which is a wrapper around GCC.  Each source file is compiled to an object file (.o) and linked with the Xilinx runtime (XRT) shared library to create the executable. For details on GCC and associated command line options, refer to [Using the GNU Compiler Collection (GCC)](https://gcc.gnu.org/onlinedocs/gcc/). For more information about how the host program is structured and the use of OpenCL™ API calls, you can refer to [Developing Applications](https://www.xilinx.com/html_docs/xilinx2019_2/vitis_doc/lhv1569273988420.html).
