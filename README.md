@@ -8,7 +8,7 @@
 > **IMPORTANT**
 >* The content of this tutorial has been extracted from XILINX documentation. 
 >* This tutorial is meant to be a recompilation of XILINX documentation about how to build hardware 
->* accelerated applications running on Alveo Data Center accelerator card.
+> accelerated applications running on Alveo Data Center accelerator card.
 
 # 1. Introduction
 An accelerated application consists of a software program running on an x86 server, and the accelerated kernels running on an Alveo Data Center accelerator card or Xilinx FPGA. The sources for both need to be built (compiled and linked) separately.
@@ -24,6 +24,15 @@ The contents of this tutorial are structured in the following way:
 4. Hardware linking using `v++` command `-l` option to create output binary container (XCLBIN) file.
 5. Program RTL kernel onto the FPGA and run in in Hardware or Hardware-Emulation.
 
+> **IMPORTANT**
+> This tutorial shows the methodology to build both software and hardware portions of the design 
+> going step by step through the different commands, but there is a Makefile that automates this
+> process. If you want to know about the different options of the Makefile, you can type:
+```
+$ cd $TOPDIR
+$ make help
+```
+
 # 3. Requirements for Using an RTL Design as an RTL Kernel
 To use an RTL kernel within the Vitis IDE, it must meet both the Vitis core development kit execution model and the hardware interface requirements.
 
@@ -32,7 +41,7 @@ To use an RTL kernel within the Vitis IDE, it must meet both the Vitis core deve
 RTL kernels use the same software interface and execution model as C/C++ kernels. They are seen by the host application as functions with a void return value, scalar arguments, and pointer arguments. For instance:
 
 ```C
-void vadd_A_B(int *a, int *b, int scalar)
+void gcd_kernel(int *a, int *b, int scalar)
 ```
 
 This implies that an RTL kernel has an execution model like a software function:
@@ -76,9 +85,9 @@ If the original RTL design uses a different execution model or hardware interfac
 
 If you want to know more about AXI4 Protocol, you can refer to ***AXI Reference Guide ([UG1037](https://www.xilinx.com/support/documentation/ip_documentation/axi_ref_guide/latest/ug1037-vivado-axi-reference-guide.pdf))***.
 
-## Vector-Accumulate RTL IP
+## GcdUnitRTL IP
 
-For this tutorial, the Vector-Accumulate RTL IP performing `B[i]=A[i]+B[i]` meets all the requirements described above and has the following characteristics:
+For this tutorial, we are using a GcdUnitRTL IP to calculate the greatest common divisor between two numbers `output = GcdUnitRTL(input_A, input_B)`. The GcdUnitRTL is wrapped by GcdFSM module that implements a Finite State Machine to allow the GcdUnit to process arrays of data. GcdFSM performs `B[i]=GcdFSM(A[i],B[i])` where it calculates the greatest common divisor of each pair of elements from arrays A and B and stores it back to B. The RTL kernel which contains this IP is called gcd_kernel and it meets all the requirements described above and has the following characteristics:
 
 - Two AXI4 memory mapped interfaces:
   - One interface is used to read A
@@ -113,32 +122,43 @@ To access the reference files for this tutoral, type the following into a termin
 The alveo_tutorial directory is structured in the following way:
 ```
 alveo_tutorial
-|___ [Makefile]()
-|___ [run_rtl_kernel.sh]()
+|___ Makefile
+|___ run_rtl_kernel.sh
 |___ scripts
-|    |___ [gen_xo.tcl]()
-|    |___ [package_kernel.tcl]()
+|    |___ gen_xo.tcl
+|    |___ package_kernel.tcl
 |___ src
-     |___ host]
-     |    |___ [host.cpp]()
+     |___ host
+     |    |___ host.cpp
      |___ IP
-     |    |___ [A_axi_read_master.sv]()
-     |    |___ [B_axi_read_master.sv]()
-     |    |___ [Vadd_A_B_control_s_axi.v]()
-     |    |___ [Vadd_A_B_example_adder.v]()
-     |    |___ [Vadd_A_B_example_axi_write_master.sv]()
-     |    |___ [Vadd_A_B_example_counter.sv]()
-     |    |___ [Vadd_A_B_example.sv]()
-     |    |___ [Vadd_A_B_example_vadd.sv]()
-     |    |___ [Vadd_A_B.v]()
-     |    |___ [Vadd_B.sv]()
+     |    |___ gcd_kernel.v
+     |    |___ control_s_axi.v
+     |    |___ gcd_kernel_top.sv
+     |    |___ A_input.sv
+     |    |___ B_input.sv
+     |    |___ axi_read_master.sv
+     |    |___ axi_write_master.sv
+     |    |___ helper_adder.sv
+     |    |___ helper_counter.sv
+     |    |___ GcdFSM.sv
+     |    |___ GcdUnitRTL.sv
+     |    |___ arithmetic.sv
+     |    |___ muxes.sv
+     |    |___ regs.sv
      |___ xml
-          |___ [kernel.xml]()
+          |___ kernel.xml
 ``` 
 
 
 # 4. Host program (Building the Software)
 The software program is written in C/C++ and uses OpenCL™ API calls to communicate and control the accelerated kernels. It is built using the standard GCC compiler or using the `g++` compiler, which is a wrapper around GCC.  Each source file is compiled to an object file (.o) and linked with the Xilinx runtime (XRT) shared library to create the executable. For details on GCC and associated command line options, refer to [Using the GNU Compiler Collection (GCC)](https://gcc.gnu.org/onlinedocs/gcc/). For more information about how the host program is structured and the use of OpenCL™ API calls, you can refer to [Developing Applications](https://www.xilinx.com/html_docs/xilinx2019_2/vitis_doc/lhv1569273988420.html).
+
+In the case of this tutorial, the host program is located at `$TOPDIR/src/host/host.cpp`. The host program uses OpenCL™ API calls to communicate and control the gcd_kernel. In order to create a new kernel using OpenCL™ (after using other API's to identify the devices connected, creating a context for the device, creating a command queue, and creating and building a program), we use the command:
+
+```
+kernel = clCreateKernel(program, "gcd_kernel", &err);
+```
+If you want to change the name of the kernel, you can substitute "gcd_kernel" by the name of your kernel. If you want to understand the structure of the host program and the different OpenCL™ API commands used, you can click [here](https://www.xilinx.com/html_docs/xilinx2019_2/vitis_doc/lhv1569273988420.html). You will be able to see how to use buffers to pass input arrays A and B to memory and how setting the different arguments to the kernel such as the address of the first elements of these arrays.
 
 1. **Compiling the Software Program**
 
