@@ -215,7 +215,7 @@ Optionally, the output object file name can be specified with the `-o` option as
 
 # 5. RTL Kernel (Building the Hardware)
 
-**Hardware Structure**
+## Hardware Structure
 
 Before building the hardware, we must understand how it is structured in order to be built in the Alveo card. Remember that the hardware must meet certain requirements in order to be recognized as an RTL kernel, so if your RTL IP does not meet these requirements, it must be packed in a wrapper that does meet them. The RTL files provided in this tutorial are structured so your RTL IP is properly packed. The following diagram illustrates the structure of the RTL kernel: 
 
@@ -230,6 +230,37 @@ The `Top_wrapper` module (located in {kernel_name}.sv) functions as a wrapper fo
 The `axi_read_master` (located in axi_read_master.sv) and `axi_write_master` (located in axi_write_master.sv) modules handle the operations of reading and writing to memory respectively. Every AXI4 Master interface contains 5 channels: 2 for reading operations and 3 for writing operations as it can be seen in the following diagrams: 
 
 ![AXI4 channels](AXI4_ifc.jpg)
+
+Each of these channels consists of a valid/ready protocol. Every time we add a new AXI4 Master Memory Mapped interface to our RTL kernel, we must add all the signals involved. The following shows an example of the signals involved in an AXI4 Master Memory Mapped interface extracted from the top module `gcd_kernel` for the m00_axi interface: 
+
+```
+  output wire                                    m00_axi_awvalid      ,
+  input  wire                                    m00_axi_awready      ,
+  output wire [C_M00_AXI_ADDR_WIDTH-1:0]         m00_axi_awaddr       ,
+  output wire [8-1:0]                            m00_axi_awlen        ,
+  output wire                                    m00_axi_wvalid       ,
+  input  wire                                    m00_axi_wready       ,
+  output wire [C_M00_AXI_DATA_WIDTH-1:0]         m00_axi_wdata        ,
+  output wire [C_M00_AXI_DATA_WIDTH/8-1:0]       m00_axi_wstrb        ,
+  output wire                                    m00_axi_wlast        ,
+  input  wire                                    m00_axi_bvalid       ,
+  output wire                                    m00_axi_bready       ,
+  output wire                                    m00_axi_arvalid      ,
+  input  wire                                    m00_axi_arready      ,
+  output wire [C_M00_AXI_ADDR_WIDTH-1:0]         m00_axi_araddr       ,
+  output wire [8-1:0]                            m00_axi_arlen        ,
+  input  wire                                    m00_axi_rvalid       ,
+  output wire                                    m00_axi_rready       ,
+  input  wire [C_M00_AXI_DATA_WIDTH-1:0]         m00_axi_rdata        ,
+  input  wire                                    m00_axi_rlast        ,
+```
+We can notice the use of constants to set the bitwidth of address and data values. If we want to add a new interface, we can copy and paste this group of signals changing the prefix `m00_axi_` to the number of the interface. `axi_read_master` and `axi_write_master` can be used to handle reading and writing signals respectively. 
+
+>**IMPORTANT**
+> If we want to make an interface READ ONLY or WRITE ONLY, we must make sure that 
+> the signals that are unused are clear (assigned 0). 
+
+## Building Hardware
 
 After building the host program, you need to build the kernels that run on the hardware accelerator card.  Like building the host application, building kernels also requires compiling and linking. The hardware kernels can be coded in C/C++, OpenCL C, or RTL. The C/C++ and OpenCL C kernels are compiled using the Vitis compiler, while RTL-coded kernels are compiled using the Xilinx `package_xo` utility.
 
@@ -287,7 +318,7 @@ As it can be seen, a kernel description XML file is needed by the `package_xo` c
 ```
 <?xml version="1.0" encoding="UTF-8"?>
 <root versionMajor="1" versionMinor="6">
-  <kernel name="Vadd_A_B" language="ip_c" vlnv="mycompany.com:kernel:Vadd_A_B:1.0" attributes="" preferredWorkGroupSizeMultiple="0" workGroupSize="1" interrupt="true" hwControlProtocol="ap_ctrl_hs">
+  <kernel name="gcd_kernel" language="ip_c" vlnv="mycompany.com:kernel:gcd_kernel:1.0" attributes="" preferredWorkGroupSizeMultiple="0" workGroupSize="1" interrupt="true" hwControlProtocol="ap_ctrl_hs">
     <ports>
       <port name="s_axi_control" mode="slave" range="0x1000" dataWidth="32" portType="addressable" base="0x0"/>
       <port name="m00_axi" mode="master" range="0xFFFFFFFFFFFFFFFF" dataWidth="512" portType="addressable" base="0x0"/>
@@ -357,6 +388,7 @@ to the FIFO inserted for the PIPE or from the FIFO to the kernel.
 |  | dstInst | Specifies the destination instance of the connection. | 
 |  | dstPort | Specifies the port on the destination instance of the connection. | 
 
+If we want to generate a different kernel, we must modify the kernel.xml file accordingly. Every RTL kernel must have one kernel.xml file.
 
 ## Tcl scripts
 Since the `package_xo` is a Tcl command, we utilize a Tcl script to execute it in Vivado batch mode. If you go to `$TOPDIR/scripts/`, you will notice two Tcl scripts: `gen_xo.tcl` and `package_kernel.tcl`. The `gen_xo.tcl` script is used to set the parameters for the `package_xo`. You can check its content by typing the following in the terminal:
@@ -384,7 +416,7 @@ Now, in order to execute the `package_xo` Tcl command to generate the XO Object 
 % /opt/xilinx/Xilinx_Vivado_vitis_2019.2/Vivado/2019.2/bin/vivado -mode batch -source scripts/gen_xo.tcl -tclargs ./xclbin/{kernel name}.{target}.{device}.xo {kernel name} {target} {device}
 ```
 where in our case:
-`{kernel name}` : vadd
+`{kernel name}` : gcd_kernel
 `{target}` : hw
 `{device}` : xilinx_u250_xdma_201830_2
 
@@ -414,7 +446,7 @@ The compile and link `v++` commands for both *hardware emulation* and *system* b
 * **Hardware Emulation Build**
 
   ```
-  v++ -t hw_emu -lo .xclbin/vadd.hw_emu.xilinx_u250_xdma_201830_2.xclbin ./xclbin/vadd.hw_emu.xilinx_u250_xdma_201830_2.xo 
+  v++ -t hw_emu -lo .xclbin/vadd.hw_emu.xilinx_u250_xdma_201830_2.xclbin ./xclbin/gcd_kernel.hw_emu.xilinx_u250_xdma_201830_2.xo 
   ```
 
 * **System Build**
@@ -422,7 +454,7 @@ The compile and link `v++` commands for both *hardware emulation* and *system* b
    >**IMPORTANT:** Because of the FPGA binary file synthesis and implementation, compiling and linking for the hardware target can take several hours.
 
    ```
-  v++ -t hw -lo .xclbin/vadd.hw_emu.xilinx_u250_xdma_201830_2.xclbin ./xclbin/vadd.hw_emu.xilinx_u250_xdma_201830_2.xo 
+  v++ -t hw -lo .xclbin/vadd.hw_emu.xilinx_u250_xdma_201830_2.xclbin ./xclbin/gcd_kernel.hw_emu.xilinx_u250_xdma_201830_2.xo 
   ```
   
 >**IMPORTANT**: To organize the logs and reports generated by the v++ command, we can utilize the following flags:
@@ -450,10 +482,6 @@ vitis_analyzer run_summary
 
 ![guidance](images/guidance_vitis.png)
 
-* The following figure shows an example of the guidance report generated during the run stage. This can be opened using the run_summary report.
-
-     ![Hardware compilation guidance report](images/system_estimate_example_report_vitis.png)
-
 ### Putting it All Together
 
 The following steps summarize how to build both the software and hardware targeting hardware system using the source files in this lab.
@@ -478,14 +506,14 @@ The following steps summarize how to build both the software and hardware target
 % /opt/xilinx/Xilinx_Vivado_vitis_2019.2/Vivado/2019.2/bin/vivado -mode batch -source scripts/gen_xo.tcl -tclargs ./xclbin/{kernel name}.{target}.{device}.xo {kernel name} {target} {device}
 ```
 where in our case:
-`{kernel name}` : vadd
+`{kernel name}` : gcd_kernel
 `{target}` : hw
 `{device}` : xilinx_u250_xdma_201830_2
 
 4. Build the XCLBIN binary file.
 ```
 % cd $TOPDIR
-% v++ -t hw -lo .xclbin/vadd.hw_emu.xilinx_u250_xdma_201830_2.xclbin ./xclbin/vadd.hw_emu.xilinx_u250_xdma_201830_2.xo
+% v++ -t hw -lo .xclbin/gcd_kernel.hw.xilinx_u250_xdma_201830_2.xclbin ./xclbin/gcd_kernel.hw.xilinx_u250_xdma_201830_2.xo
 ```
 >**IMPORTANT**: For simplicity, you can use the following command from the Makefile to complete steps 2 to 4:
 ```
@@ -537,17 +565,17 @@ Finally, before running either the hardware emulation, define the XCL_EMULATION_
 With the configuration file `emconfig.json` generated and XCL_EMULATION_MODE variable set, use the following command to execute the host program and kernel in hardware emulation mode.
 
    ```bash
-   ./host vadd.hw_emu.xilinx_u250_xdma_201830_2.xclbin
+   ./host gcd_kernel.hw.xilinx_u250_xdma_201830_2.xclbin
    ```
 
 After successfully running hardware emulation, you will see output similar to the following in the Console.
 
   ```
-  Loading: 'mmult.hw_emu.xilinx_u200_xdma_201830_2.xclbin'
+  Loading: 'gcd_kernel.hw_emu.xilinx_u200_xdma_201830_2.xclbin'
   INFO: [Vitis-EM 01] Hardware emulation runs simulation underneath. Using a large data set will result in long simulation times. It is recommended that a small dataset is used for faster execution. This flow does not use cycle accurate models and hence the performance data generated is approximate.
   TEST PASSED
   INFO: [Vitis-EM 22] [Wall clock time: 19:16, Emulation time: 0.00651464 ms] Data transfer between kernel(s) and global memory(s)
-  mmult_1:m_axi_gmem-DDR[1]          RD = 2.000 KB               WR = 1.000 KB
+  gcd_kernel_1:m_axi_gmem-DDR[1]          RD = 2.000 KB               WR = 1.000 KB
   ```
 # 8. Execution in Hardware
 To proceed with the Execution of the design in Hardware, we must make sure that the application has been built successfully. Once we are done building the application, we must ensure the environment variable XCL_EMULATION_MODE is not set. If you have done the hardware emulation in the previous step, it might have been set to `hw_emu`. Run the following command:
@@ -561,13 +589,13 @@ With the host program and hardware platform (xclbin), you can run the applicatio
 ***Running the application***
 ```
 % cd $TOPDIR
-% ./host .xclbin/vadd.hw.xilinx_u250_xdma_201830_2.xclbin
+% ./host .xclbin/gcd_kernel.hw.xilinx_u250_xdma_201830_2.xclbin
 ```
 
 After successfully running the application, you will see a similar output in the Console view.
 
   ```
-  Loading: 'mmult.hw.xilinx_u200_xdma_201830_2.xclbin'
+  Loading: 'gcd_kernel.hw.xilinx_u200_xdma_201830_2.xclbin'
   TEST PASSED
   ```
 
