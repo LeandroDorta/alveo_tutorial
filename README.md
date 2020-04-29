@@ -198,7 +198,7 @@ Optionally, the output object file name can be specified with the `-o` option as
 
     ```bash
     g++ -I$XILINX_XRT/include/ -I$XILINX_VIVADO/include/ -Wall -O0 -g -std=c++11 \
-    /src/host/host.cpp  -o 'host'  -L$XILINX_XRT/lib/ -lOpenCL -lpthread -lrt -lstdc++
+    ./src/host/host.cpp  -o 'host'  -L$XILINX_XRT/lib/ -lOpenCL -lpthread -lrt -lstdc++
     ```
 
    >**Command Options and Descriptions**
@@ -302,13 +302,14 @@ package_xo  -kernel_name <arg> [-force] [-kernel_xml <arg>] [-design_xml <arg>]
 | `-verbose` | (Optional) Temporarily override any message limits and return all messages from this command. |
 
 In our case, the command that we are using is the following:
-`package_xo -xo_path {xoname} -kernel_name Vadd_A_B -ip_directory ./packaged_kernel_${suffix} -kernel_xml ./src/xml/kernel.xml`
+`package_xo -xo_path {xoname} -kernel_name ${kernel_name} -ip_directory ./packaged_kernel_${suffix} -kernel_xml ./src/xml/kernel.xml`
 
 where:
 ```
 {xoname} is .xclbin/$(KERNEL).$(TARGET).$(DEVICE).xo 
+{kernel_name} is gcd_kernel
 {suffix} is "$(KERNEL)_$(TARGET)_$(DEVICE)"
-  $(KERNEL): vadd
+  $(KERNEL): gcd_kernel
   $(TARGET): hw
   $(DEVICE): xilinx_u250_xdma_201830_2
 ```
@@ -388,7 +389,7 @@ to the FIFO inserted for the PIPE or from the FIFO to the kernel.
 |  | dstInst | Specifies the destination instance of the connection. | 
 |  | dstPort | Specifies the port on the destination instance of the connection. | 
 
-If we want to generate a different kernel, we must modify the kernel.xml file accordingly. Every RTL kernel must have one kernel.xml file.
+If we want to generate a different kernel, we must modify the kernel.xml file accordingly (the kernel_name must match the kernel name used in both host program and RTL and for every buffer used will have a port in xml using the same nomenclature). Every RTL kernel must have one kernel.xml file.
 
 ## Tcl scripts
 Since the `package_xo` is a Tcl command, we utilize a Tcl script to execute it in Vivado batch mode. If you go to `$TOPDIR/scripts/`, you will notice two Tcl scripts: `gen_xo.tcl` and `package_kernel.tcl`. The `gen_xo.tcl` script is used to set the parameters for the `package_xo`. You can check its content by typing the following in the terminal:
@@ -408,15 +409,22 @@ You will notice that this Tcl script is expecting 4 arguments (otherwise it prin
 
 `device`: xilinx_u250_xdma_201830_2
 
-You can also notice that the Tcl script is also sourcing the `package_kernel.tcl` script. This script set different properties and parameters necessary for a correct implementation of the RTL kernel in the Alveo card, such as identifying the source files for the hardware design (from `$TOPDIR/src`). If you want to know more about the content of `package_kernel.tcl`, click [here]().
+You can also notice that the Tcl script is also sourcing the `package_kernel.tcl` script. This script set different properties and parameters necessary for a correct implementation of the RTL kernel in the Alveo card, such as identifying the source files for the hardware design (from `$TOPDIR/src/IP/`) and setting the top  module and top file of the design, which is done using this Tcl commands:
+
+```
+set_property top {kernel_name} [current_fileset]
+set_property top_file {$path_to_hdl/{kernel_name}.v} [current_fileset]
+```
+
+In our case, we use `gcd_kernel` in place of the `kernel_name`. If you want to know more about the content of `package_kernel.tcl`, click [here]().
 
 Now, in order to execute the `package_xo` Tcl command to generate the XO Object file for our RTL kernel, we proceed to run the `gen_xo.tcl` script using Vivado in batch mode. We can do this by typing the following commands in the terminal:
 ```
 % cd $TOPDIR
-% /opt/xilinx/Xilinx_Vivado_vitis_2019.2/Vivado/2019.2/bin/vivado -mode batch -source scripts/gen_xo.tcl -tclargs ./xclbin/{kernel name}.{target}.{device}.xo {kernel name} {target} {device}
+% /opt/xilinx/Xilinx_Vivado_vitis_2019.2/Vivado/2019.2/bin/vivado -mode batch -source scripts/gen_xo.tcl -tclargs ./xclbin/{kernel name}.{target}.{device}.xo {kernel_name} {target} {device}
 ```
 where in our case:
-`{kernel name}` : gcd_kernel
+`{kernel_name}` : gcd_kernel
 `{target}` : hw
 `{device}` : xilinx_u250_xdma_201830_2
 
@@ -440,7 +448,6 @@ You can also specify the name of the generated output file using the `-o` option
 To build the hardware for *hardware emulation*, or for targeting the Alveo Data Center accelerator card *system*, set the `-t` option specifying the <*build_target*> to **hw_emu** for hardware emulation, or **hw** to build for the accelerator card.`
 
 The compile and link `v++` commands for both *hardware emulation* and *system* build targets are provided below.
-
 
 
 * **Hardware Emulation Build**
@@ -470,17 +477,7 @@ During the compile, link, and run stages, the guidance is generated that can hav
 
 For *hardware emulation* and *system builds* targeted builds, a `system_estimate_<kernel_name>.<build_target>.<dsa_name>.xtxt` report file is also automatically generated for both the compilation and linking stages. It provides the estimated FPGA resource usage and estimated frequency of the hardware accelerated kernel.
 
-The Vitis analyzer can be used to open these specific reports or can directly open compile_summary, link_summary, or the run_summary reports generated by the compile, link, and run stage. When these summary reports are opened, the Vitis analyzer automatically opens the relevant reports.
-
-Use the following commands to open these reports.
-
-```
-vitis_analyzer compile_summary
-vitis_analyzer link_summary
-vitis_analyzer run_summary
-```
-
-![guidance](images/guidance_vitis.png)
+Inside the directory `$TOPDIR/xclbin/`, there will be the binary file (xclbin), the object file (xo) and `logs`, `link`, and `reports` directories. Inside `logs`, there can be found log files related to the building operation along with any possible errors. In `reports`, there can be found report files related to timing analysis and resource utilization.
 
 ### Putting it All Together
 
@@ -565,7 +562,7 @@ Finally, before running either the hardware emulation, define the XCL_EMULATION_
 With the configuration file `emconfig.json` generated and XCL_EMULATION_MODE variable set, use the following command to execute the host program and kernel in hardware emulation mode.
 
    ```bash
-   ./host gcd_kernel.hw.xilinx_u250_xdma_201830_2.xclbin
+   ./host gcd_kernel.hw_emu.xilinx_u250_xdma_201830_2.xclbin xilinx_u250_xdma_201830_2
    ```
 
 After successfully running hardware emulation, you will see output similar to the following in the Console.
@@ -589,7 +586,7 @@ With the host program and hardware platform (xclbin), you can run the applicatio
 ***Running the application***
 ```
 % cd $TOPDIR
-% ./host .xclbin/gcd_kernel.hw.xilinx_u250_xdma_201830_2.xclbin
+% ./host .xclbin/gcd_kernel.hw.xilinx_u250_xdma_201830_2.xclbin xilinx_u250_xdma_201830_2
 ```
 
 After successfully running the application, you will see a similar output in the Console view.
